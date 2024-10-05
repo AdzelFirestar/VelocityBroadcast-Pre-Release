@@ -1,0 +1,6 @@
+# DO NOT EDIT
+Plugin Version: '0.9 Pre-Release'
+
+# EDIT BELOW THIS LINE
+update-check-enabled: true  # Whether you want to enable update notifications (Default: true)
+prefix: '&9&l[&3&lServer&9&l]&r' # The prefix of the plugin/broadcasts

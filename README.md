@@ -1,17 +1,16 @@
-# VelocityBroadcast-Pre-Release
-The pre-release or "in progress" builds of our VelocityBroadcast Plugin. Bugs may show up and may be unstable. Config files may not carry over. So proceed with caution.
+# VelocityBroadcast
+VelocityBroadcast is a plugin that can send broadcast messages to the entire proxy network. This plugin supports an infinite amount of servers on a network and has an easy to read text format so users can read it as easily as possible.
 
-# Reporting bugs
-Please use our issue tracker up top to submit bugs, issues, suggestions, and more. I do check those often. If you want to contribute, check out the CONTRIBUTE file in the file list.
+## Information
+This plugin is currently in the latest stable build and works as intended. If any bugs arise, please do not hesitate to let me know on discord. My username is adzelfirestar
 
-# Currently in progress
-- [x] Update Checker  
-- [ ] Working Update Message with Clickable Links  
-- [x] New configuration option to match version in the VelocityBroadcast.java file  
-- [x] New configuration option for debug mode. (Set to true by default. If the messages get annoying, set the debug mode to false)  
-- [ ] Cleaning up the code to appear easier to read and understand. (If you want to help clean the code, please feel free to contribute!) 
+## Commands
+This plugin is as simple as can be. Usage is limited to one command right now, so it can be mastered by everyone.
 
-# Our new discord
-We now have a development/support/community discord server! Feel free to join us to help out, get support, or learn more about coding! We harbor an environment for learning and raising each other up as developers.
+The main command is /vbroadcast (or you can use the aliase /vb). Usage is as simple as /vb {message} (Make sure to give your admins the vb.broadcast permission)
 
-[Adzel Develops Official Discord Server](https://www.discord.gg/xWeaWHtCYw)
+## Future plans
+Right now we only have two plans. You can suggest more though if you want to see a feature added. Just add a suggestion through the "Issues" menu above. I will take a look and see if it is a good idea to add the feature you want to see.
+
+## Licensing
+Please do not distribute my code as your own. Please do not rip my code and make a new plugin and claim it as your own. Please do not distribute my plugin jar or other files elsewhere. They are on github for a reason. If you want to suggest commits and help me make this plugin better, do so through the correct channels. Thank you.
