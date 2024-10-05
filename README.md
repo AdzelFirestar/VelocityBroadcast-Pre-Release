@@ -13,3 +13,5 @@ Please use our issue tracker up top to submit bugs, issues, suggestions, and mor
 
 # Our new discord
 We now have a development/support/community discord server! Feel free to join us to help out, get support, or learn more about coding! We harbor an environment for learning and raising each other up as developers.
+
+[Adzel Develops Official Discord Server](https://www.discord.gg/xWeaWHtCYw)
