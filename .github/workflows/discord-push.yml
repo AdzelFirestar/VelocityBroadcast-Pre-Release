@@ -2,7 +2,8 @@ name: Notify Discord on Release
 
 on:
   release:
-    types: [published]  # or manually using workflow_dispatch
+    types: [published]  # Trigger automatically when a release is published
+  workflow_dispatch:      # Allow manual trigger from GitHub Actions UI
 
 jobs:
   notify-discord:
