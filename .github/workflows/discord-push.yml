@@ -1,34 +1,24 @@
-name: Notify Discord on Release
-
 on:
   release:
     types: [published]
-  workflow_dispatch:  # Allow manual trigger from GitHub Actions UI
+    workflow_dispatch:  # Allow manual trigger from GitHub Actions UI
 
 jobs:
-  notify-discord:
+  github-releases-to-discord:
     runs-on: ubuntu-latest
     steps:
-      - name: Set Version and Release Notes
-        id: set_version_and_notes
-        run: |
-          echo "NEW_VERSION=${{ github.event.release.tag_name }}" >> $GITHUB_ENV
-          echo "RELEASE_NOTES=${{ github.event.release.body }}" >> $GITHUB_ENV
-
-      - name: Debug Variables
-        run: |
-          echo "New Version: ${{ env.NEW_VERSION }}"
-          echo "Release Notes: ${{ env.RELEASE_NOTES }}"
-
-      - name: Send notification to Discord
-        env:
-          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}  # Ensure your webhook URL is set in secrets
-          NEW_VERSION: ${{ env.NEW_VERSION }}  # Fetches the new version from the environment variable
-          RELEASE_NOTES: ${{ env.RELEASE_NOTES }}  # Fetches the release notes from the environment variable
-        run: |
-          response=$(curl -H "Content-Type: application/json" \
-          -d "{
-                \"content\": \"## 🚀 New Pre-Release Version 🚀 \n\n**Version:** ${NEW_VERSION} \n\n**Release Notes:** \n\`\`\`${RELEASE_NOTES}\`\`\` \n\n**Download it here:** https://bit.ly/3ZPH5NR\"
-              }" \
-          $DISCORD_WEBHOOK_URL)
-          echo "Response from Discord: $response"
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Github Releases To Discord
+        uses: SethCohen/github-releases-to-discord@v1.15.1
+        with:
+          webhook_url: ${{ secrets.WEBHOOK_URL }}
+          color: "2105893"
+          username: "GitHub Releases - VelocityBroadcast Pre-Releases"
+          avatar_url: "https://cdn.discordapp.com/avatars/487431320314576937/bd64361e4ba6313d561d54e78c9e7171.png"
+          content: "||@Resource Updates|| \n## New Update Released to Github \nAn update has just been pushed to Github for the VelocityBroadcast Pre-Release Builds. Check it out and let us know what you think! \n\n***Download it here: https://bit.ly/3ZPH5NR***"
+          footer_title: "New Pre-Release Build"
+          footer_icon_url: "https://cdn3.emoji.gg/emojis/4601_github.png"
+          footer_timestamp: true
+          max_description: '4096'
+          reduce_headings: true
