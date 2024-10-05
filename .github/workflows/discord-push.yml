@@ -9,6 +9,16 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
+        
+      - name: Set Release Variables
+        id: set_release_variables
+        run: |
+          if [ "${{ github.event_name }}" == "release" ]; then
+            echo "CONTENT=||@Resource Updates|| \n## New Update Released to Github \nAn update has just been pushed to Github for the VelocityBroadcast Pre-Release Builds. Check it out and let us know what you think! \n\n***Download it here: https://bit.ly/3ZPH5NR***" >> $GITHUB_ENV
+          else
+            echo "CONTENT=||@Resource Updates|| \n## Manual Trigger \nThis is a manual trigger for the GitHub Releases to Discord action." >> $GITHUB_ENV
+          fi
+
       - name: Github Releases To Discord
         uses: SethCohen/github-releases-to-discord@v1.15.1
         with:
@@ -16,7 +26,7 @@ jobs:
           color: "2105893"
           username: "GitHub Releases"
           avatar_url: "https://cdn.discordapp.com/avatars/487431320314576937/bd64361e4ba6313d561d54e78c9e7171.png"
-          content: "||@Resource Updates|| \n## New Update Released to Github \nAn update has just been pushed to Github for the VelocityBroadcast Pre-Release Builds. Check it out and let us know what you think! \n\n***Download it here: https://bit.ly/3ZPH5NR***"
+          content: ${{ env.CONTENT }}  # Use the content from the environment variable
           footer_title: "New Pre-Release Build"
           footer_icon_url: "https://cdn3.emoji.gg/emojis/4601_github.png"
           footer_timestamp: true
