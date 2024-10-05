@@ -9,23 +9,13 @@ jobs:
   notify-discord:
     runs-on: ubuntu-latest
     steps:
-      - name: Set Version
-        id: set_version
-        run: echo "NEW_VERSION=${{ github.event.release.tag_name }}" >> $GITHUB_ENV
-
-      - name: Set Release Notes
-        id: set_notes
-        run: echo "RELEASE_NOTES=${{ github.event.release.body }}" >> $GITHUB_ENV
-
       - name: Send notification to Discord
         env:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}  # Ensure your webhook URL is set in secrets
-          NEW_VERSION: ${{ env.NEW_VERSION }}  # Fetches the new version from the environment variable
-          RELEASE_NOTES: ${{ env.RELEASE_NOTES }}  # Fetches the release notes from the environment variable
         run: |
           response=$(curl -H "Content-Type: application/json" \
           -d "{
-                \"content\": \"## 🚀 New Pre-Release Version 🚀 \n\n**Version:** ${NEW_VERSION} \n\n**Release Notes:** \n\`\`\`${RELEASE_NOTES}\`\`\` \n\n**Download it here:** https://bit.ly/3ZPH5NR\"
+                \"content\": \"## 🚀 New Pre-Release Version 🚀 \n\n**Version:** ${{ github.event.release.tag_name }} \n\n**Release Notes:** \n\`\`\`${{ github.event.release.body }}\`\`\` \n\n**Download it here:** https://bit.ly/3ZPH5NR\"
               }" \
           $DISCORD_WEBHOOK_URL)
           echo "Response from Discord: $response"
