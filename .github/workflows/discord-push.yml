@@ -3,7 +3,7 @@ name: Notify Discord on Release
 on:
   release:
     types: [published]
-  workflow_dispatch:      # Allow manual trigger from GitHub Actions UI
+  workflow_dispatch:  # Allow manual trigger from GitHub Actions UI
 
 jobs:
   notify-discord:
@@ -24,8 +24,8 @@ jobs:
           RELEASE_NOTES: ${{ env.RELEASE_NOTES }}  # Fetches the release notes from the environment variable
         run: |
           response=$(curl -H "Content-Type: application/json" \
-          -d '{
-                "content": "## 🚀 New Pre-Release Version 🚀 \n\n**Version: ${NEW_VERSION}** \n\n**Release Notes:** \n```${RELEASE_NOTES}``` \n\n**Download it here: https://bit.ly/3ZPH5NR**"
-              }' \
+          -d "{
+                \"content\": \"## 🚀 New Pre-Release Version 🚀 \n\n**Version:** ${NEW_VERSION} \n\n**Release Notes:** \n\`\`\`${RELEASE_NOTES}\`\`\` \n\n**Download it here:** https://bit.ly/3ZPH5NR\"
+              }" \
           $DISCORD_WEBHOOK_URL)
           echo "Response from Discord: $response"
