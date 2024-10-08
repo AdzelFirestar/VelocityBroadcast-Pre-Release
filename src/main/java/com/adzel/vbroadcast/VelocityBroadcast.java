@@ -11,6 +11,7 @@ import com.velocitypowered.api.proxy.ProxyServer;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.yaml.snakeyaml.Yaml;
 
@@ -20,9 +21,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Base64;
 import java.util.Map;
-import java.util.Scanner;
 
 @Plugin(id = "velocitybroadcast", name = "VelocityBroadcast", version = "1.0 Pre-Release",
         description = "Broadcast messages across all servers", authors = {"adzel"})
@@ -86,68 +85,46 @@ public class VelocityBroadcast {
     private void registerCommands() {
         server.getCommandManager().register(
                 server.getCommandManager().metaBuilder("vbroadcast").aliases("vb").build(),
-                new SimpleCommand() {
-                    @Override
-                    public void execute(Invocation invocation) {
-                        CommandSource source = invocation.source();
-                        String message = String.join(" ", invocation.arguments());
-
-                        logger.info("BroadcastCommand executed by: " + source.getClass().getSimpleName());
-                        logger.info("Arguments: " + message);
-
-                        if (message.isEmpty()) {
-                            source.sendMessage(Component.text("Please provide a message to broadcast.").color(NamedTextColor.RED));
-                            return;
-                        }
-
-                        // Broadcast the message to all players
-                        server.getAllPlayers().forEach(player -> {
-                            Component broadcastMessage = LegacyComponentSerializer.legacyAmpersand().deserialize(getPrefix() + message);
-                            player.sendMessage(broadcastMessage);
-                        });
-
-                        source.sendMessage(LegacyComponentSerializer.legacyAmpersand().deserialize(getPrefix() + "Message broadcasted: &f" + message));
-                    }
-
-                    @Subscribe
-                    public boolean testPermission(CommandSource source) {
-                        return source.hasPermission("vb.broadcast");
-                    }
-                }
+                new BroadcastCommand()
         );
 
         server.getCommandManager().register(
                 server.getCommandManager().metaBuilder("vbroadcastprefix").aliases("vbprefix", "vb p").build(),
-                new SimpleCommand() {
-                    @Override
-                    public void execute(Invocation invocation) {
-                        CommandSource source = invocation.source();
-                        String newPrefix = String.join(" ", invocation.arguments());
-
-                        logger.info("PrefixCommand executed by: " + source.getClass().getSimpleName());
-                        logger.info("New prefix: " + newPrefix);
-
-                        if (newPrefix.isEmpty()) {
-                            source.sendMessage(Component.text("Please provide a new prefix.").color(NamedTextColor.RED));
-                            return;
-                        }
-
-                        setPrefix(newPrefix);
-                        source.sendMessage(LegacyComponentSerializer.legacyAmpersand().deserialize(getPrefix() + "Prefix set to: &f" + newPrefix));
-                    }
-
-                    @Subscribe
-                    public boolean testPermission(CommandSource source) {
-                        return source.hasPermission("vb.prefix");
-                    }
-                }
+                new PrefixCommand()
         );
     }
 
     @Subscribe
     public void onProxyInitialize(ProxyInitializeEvent event) {
         logger.info("VelocityBroadcast initialized with prefix: " + prefix);
+        checkForUpdates(); // Call the update check when the plugin initializes
     }
+
+    @Subscribe
+    public void onPostLogin(PostLoginEvent event) {
+        if (event.getPlayer() != null) {
+            // Create the update message
+            String latestVersion = "1.0-pre"; // Set the latest version dynamically if needed
+            Component updateMessage = LegacyComponentSerializer.legacyAmpersand().deserialize(
+                    String.format("&6[&eVelocityBroadcast&6] &eA new version of VelocityBroadcast is available. Download version %s at https://bit.ly/3ZOP7GL",
+                            latestVersion));
+
+            // Check if the player has a specific permission
+            if (event.getPlayer().hasPermission("vb.broadcast")) {
+                // Send the update message to the player
+                event.getPlayer().sendMessage(updateMessage);
+            } else {
+                // Optional: You can send a different message or do nothing
+                // event.getPlayer().sendMessage(Component.text("You do not have permission to see the welcome message.").color(NamedTextColor.RED));
+            }
+
+            // Log the update message
+            logger.warn(((net.kyori.adventure.text.TextComponent) updateMessage).content());
+        } else {
+            logger.warn("Player object is null during PostLoginEvent.");
+        }
+    }
+
 
     private String loadPrefix() {
         File configFile = new File(dataDirectory.toFile(), "config.yml");
@@ -231,42 +208,72 @@ public class VelocityBroadcast {
         }
     }
 
-    private void checkForUpdates(CommandSource source) {
-        if (!updateCheckEnabled) {
-            return;
-        }
+    private void checkForUpdates() {
+        if (!isUpdateCheckEnabled()) return;
 
-        try {
-            URL url = new URL("https://api.spigotmc.org/legacy/update.php?resource=119858");
-            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-            connection.setRequestMethod("GET");
+        new Thread(() -> {
+            try {
+                URL url = new URL("https://api.spigotmc.org/legacy/update.php?resource=119858");
+                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                connection.setRequestMethod("GET");
+                connection.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.127 Safari/537.36"); // Google Chrome User-Agent
 
-            if (connection.getResponseCode() == 200) {
-                try (Scanner scanner = new Scanner(connection.getInputStream())) {
-                    StringBuilder response = new StringBuilder();
-                    while (scanner.hasNextLine()) {
-                        response.append(scanner.nextLine());
-                    }
-
-                    String latestVersion = response.toString().trim(); // Trim any whitespace
-                    logger.info("Latest version retrieved: " + latestVersion); // Log the latest version
-
+                try (BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()))) {
+                    String latestVersion = reader.readLine();
                     if (!latestVersion.equals(PLUGIN_VERSION)) {
-                        if (source.hasPermission("vb.update")) { // Check if the player has permission to see the update message
-                            source.sendMessage(LegacyComponentSerializer.legacyAmpersand().deserialize(
-                                    getPrefix() + "A new version of VelocityBroadcast is available: &f" + latestVersion));
-                        }
+                        logger.warn(String.format("A new version of VelocityBroadcast is available: %s. Download at https://www.spigotmc.org/resources/%s.", latestVersion, "119858"));
+                    } else {
+                        logger.info("You are using the latest version of VelocityBroadcast.");
                     }
                 }
+            } catch (IOException e) {
+                logger.error("Failed to check for updates: " + e.getMessage());
             }
-        } catch (IOException e) {
-            logger.error("Error checking for updates: " + e.getMessage());
+        }).start();
+    }
+
+    // Inner class for Broadcast Command
+    private class BroadcastCommand implements SimpleCommand {
+        @Override
+        public void execute(Invocation invocation) {
+            CommandSource source = invocation.source();
+            String message = String.join(" ", invocation.arguments());
+
+            logger.info("BroadcastCommand executed by: " + source.getClass().getSimpleName());
+            logger.info("Arguments: " + message);
+
+            if (message.isEmpty()) {
+                source.sendMessage(Component.text("Please provide a message to broadcast.").color(NamedTextColor.RED));
+                return;
+            }
+
+            // Broadcast the message to all players
+            server.getAllPlayers().forEach(player -> {
+                Component broadcastMessage = LegacyComponentSerializer.legacyAmpersand().deserialize(getPrefix() + message);
+                player.sendMessage(broadcastMessage);
+            });
+
+            source.sendMessage(LegacyComponentSerializer.legacyAmpersand().deserialize(getPrefix() + "Message broadcasted: &f" + message));
         }
     }
 
-    @Subscribe
-    public void onPostLogin(PostLoginEvent event) {
-        // Optionally, notify the player upon login
-        event.getPlayer().sendMessage(LegacyComponentSerializer.legacyAmpersand().deserialize(getPrefix() + "Welcome to the server!"));
+    // Inner class for Prefix Command
+    private class PrefixCommand implements SimpleCommand {
+        @Override
+        public void execute(Invocation invocation) {
+            CommandSource source = invocation.source();
+            String newPrefix = String.join(" ", invocation.arguments());
+
+            logger.info("PrefixCommand executed by: " + source.getClass().getSimpleName());
+            logger.info("New Prefix: " + newPrefix);
+
+            if (newPrefix.isEmpty()) {
+                source.sendMessage(Component.text("Please provide a new prefix.").color(NamedTextColor.RED));
+                return;
+            }
+
+            setPrefix(newPrefix);
+            source.sendMessage(LegacyComponentSerializer.legacyAmpersand().deserialize(getPrefix() + "Prefix updated to: &f" + newPrefix));
+        }
     }
 }
